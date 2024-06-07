@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: DIMENSIONAL_MODELS
+    tables:
+      - name: CUSTOMER_STAGE
+      - name: PRODUCT_STAGE
+      - name: ORDER_STAGE
