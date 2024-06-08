@@ -1,4 +1,4 @@
-{% snapshot dim_customer %}
+{% snapshot dim_customer_scd %}
 
 {{
     config(
@@ -10,7 +10,8 @@
     )
 }}
 
-select 
+select
+    {{ dbt_utils.generate_surrogate_key(['customer_id', 'record_date']) }} as customer_key,
     * 
 from {{ source('DIMENSIONAL_MODELS', 'CUSTOMER_STAGE') }}
 where record_date >= '{{ var('start_date') }}'
