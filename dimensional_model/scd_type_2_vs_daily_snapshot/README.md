@@ -253,6 +253,42 @@ Although there are a lot more rows in the daily dimension snapshot table, the pr
 ![Alt text](seconds.png)
 **Joining with the fact table**
 query profile
+```sql
+SELECT
+    o.order_id,
+    c.customer_key,
+    p.product_key,
+    o.quantity,
+    o.order_date
+FROM
+    PRACTICE.DIMENSIONAL_MODELS.ORDER_STAGE o
+    JOIN PRACTICE.DIMENSIONAL_MODELS.dim_customer_daily_snapshot c ON o.customer_id = c.customer_id
+    AND c.record_date ='2020-01-30'
+    JOIN PRACTICE.DIMENSIONAL_MODELS.dim_product_daily_snapshot p ON p.product_id = o.product_id
+    AND p.record_date ='2020-01-30'
+WHERE
+    o.order_date >= '2020-01-30'
+    AND o.order_date < '2020-01-31'
+```
+```sql
+SELECT
+    o.order_id,
+    c.customer_key,
+    p.product_key,
+    o.quantity,
+    o.order_date
+FROM
+    PRACTICE.DIMENSIONAL_MODELS.ORDER_STAGE o
+    JOIN PRACTICE.DIMENSIONAL_MODELS.dim_customer_scd c ON o.customer_id = c.customer_id
+    AND c.dbt_valid_from  <= '2020-01-30'
+    AND (c.dbt_valid_to > '2020-01-30' OR c.dbt_valid_to IS NULL)
+    JOIN PRACTICE.DIMENSIONAL_MODELS.dim_product_scd p ON p.product_id = o.product_id
+    AND p.dbt_valid_from  <= '2020-01-30'
+    AND (p.dbt_valid_to > '2020-01-30' OR p.dbt_valid_to IS NULL)
+WHERE
+    o.order_date >= '2020-01-30'
+    AND o.order_date < '2020-01-31'
+```
 
 ## Maintenance
 
