@@ -1,25 +1,25 @@
-CREATE DATABASE practice;
+CREATE DATABASE if not exists practice;
 
-CREATE schema practice.dimensional_models;
+CREATE schema if not exists practice.dimensional_models;
 
-SET customer_sample_size = 100000;
+SET customer_sample_size = 1000000;
 
 CREATE
 OR REPLACE TEMPORARY TABLE customer_change AS WITH cte AS (
     SELECT
-        UNIFORM(1, $ customer_sample_size / 2, RANDOM(1)) :: INT AS customer_id,
+        UNIFORM(1, $customer_sample_size / 2, RANDOM(1)) :: INT AS customer_id,
         MD5(customer_id) AS customer_name,
         RANDSTR(
             UNIFORM(3, 20, RANDOM(4)),
-            UNIFORM(5, $ customer_sample_size * 4, RANDOM(6))
+            UNIFORM(5, $customer_sample_size * 4, RANDOM(6))
         ) AS customer_address,
         DATEADD(
             'day',
-            FLOOR(UNIFORM(0, 364, RANDOM(7))),
+            FLOOR(UNIFORM(0, 30, RANDOM(7))),
             '2020-01-01'
         ) AS updated_date,
     FROM
-        TABLE(GENERATOR(rowcount = > $ customer_sample_size)) qualify ROW_NUMBER() over (
+        TABLE(GENERATOR(rowcount => $customer_sample_size)) qualify ROW_NUMBER() over (
             PARTITION BY customer_id,
             updated_date
             ORDER BY
@@ -71,7 +71,7 @@ OR REPLACE TABLE customer_stage AS WITH record_date AS (
                         0
                 ) n
             FROM
-                TABLE(GENERATOR(rowcount = > 365))
+                TABLE(GENERATOR(rowcount => 31))
         )
 )
 SELECT
@@ -85,21 +85,21 @@ FROM
             updated_date DESC
     ) = 1;
 
-SET product_sample_size = 10000;
+SET product_sample_size = 100000;
 
 CREATE
 OR REPLACE TEMPORARY TABLE product_change AS WITH cte AS (
     SELECT
-        UNIFORM(1, $ product_sample_size, RANDOM(1)) :: INT AS product_id,
+        UNIFORM(1, $product_sample_size, RANDOM(1)) :: INT AS product_id,
         MD5(product_id) AS product_name,
         UNIFORM(100, 10000, RANDOM(2)) AS unit_price,
         DATEADD(
             'day',
-            FLOOR(UNIFORM(0, 364, RANDOM(3))),
+            FLOOR(UNIFORM(0, 30, RANDOM(3))),
             '2020-01-01'
         ) AS updated_date,
     FROM
-        TABLE(GENERATOR(rowcount = > $ product_sample_size)) qualify ROW_NUMBER() over (
+        TABLE(GENERATOR(rowcount => $product_sample_size)) qualify ROW_NUMBER() over (
             PARTITION BY product_id,
             updated_date
             ORDER BY
@@ -145,7 +145,7 @@ OR REPLACE TABLE product_stage AS WITH record_date AS (
                         0
                 ) n
             FROM
-                TABLE(GENERATOR(rowcount = > 365))
+                TABLE(GENERATOR(rowcount => 31))
         )
 )
 SELECT
