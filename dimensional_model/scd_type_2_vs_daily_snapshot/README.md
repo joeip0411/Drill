@@ -193,7 +193,7 @@ Snowflake's `SYSTEM$CLUSTERING_INFORMATION` provides information about clusterin
 SELECT SYSTEM$CLUSTERING_INFORMATION('PRACTICE.DIMENSIONAL_MODELS.DIM_CUSTOMER_DAILY_SNAPSHOT', '(RECORD_DATE)');
 ```
 
-```json
+```
 {'cluster_by_keys': 'LINEAR(RECORD_DATE)',
  'total_partition_count': 199,
  'total_constant_partition_count': 195,
@@ -224,7 +224,7 @@ Snowflake uses micro-partitions to store underlying table data, and these micro-
 -- SCD Type 2
 SELECT SYSTEM$CLUSTERING_INFORMATION('PRACTICE.DIMENSIONAL_MODELS.DIM_CUSTOMER_SCD', '(DBT_VALID_FROM, DBT_VALID_TO)');
 ```
-```json
+```
 {'cluster_by_keys': 'LINEAR(DBT_VALID_FROM, DBT_VALID_TO)',
  'total_partition_count': 6,
  'total_constant_partition_count': 0,
