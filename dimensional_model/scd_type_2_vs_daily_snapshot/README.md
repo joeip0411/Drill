@@ -1,10 +1,13 @@
-Data modeling is crucial because it provides a structured framework for organising and interpreting data. Slowly Changing Dimension (SCD) Tyoe 2 is a popular method in data warehousing for managing and tracaking historical data changes.
+[![dbt-badge]][dbt-url] [![snowflake-badge]][snowflake-url]
 
-It is not possible to solve every problems with the same data modeling approach in the most efficient manner. It is better to model the data that fits its characteristics, the business requirement and the tech stack in each case.
 
-Given the rise of cloud data warehouse and the storage has become dirt cheap, abandoning SCD and taking daily snapshot for dimension tables could be more effective under certain scenarios.
+Data modeling is crucial because it provides a structured framework for organizing and interpreting data. Slowly Changing Dimension (SCD) Type 2 is a popular method in data warehousing for managing and tracking historical data changes.
 
-We will create two `customer` dimension tables for the same dataset, one using SCD Type 2 and the other using daily snapshots, and then compare benchmarks for both approaches.
+However, no single data modeling approach can solve all problems in the most efficient manner. It's essential to model data based on its characteristics, business requirements, and the technology stack in use.
+
+With the rise of cloud data warehouses and the decreasing cost of storage, abandoning SCD in favor of daily snapshots for dimension tables could be more effective in certain scenarios.
+
+To compare these approaches, we will create two `customer` dimension tables for the same dataset: one using SCD Type 2 and the other using daily snapshots. We will then benchmark and compare the performance and efficiency of both methods.
 
 ## Assumption
 Daily snapshot of the transaction database table is exported to the data lake and available for OLAP workload.
@@ -169,10 +172,11 @@ FROM
 WHERE
     table_name in ('DIM_CUSTOMER_DAILY_SNAPSHOT', 'DIM_CUSTOMER_SCD');
 ```
-| TABLE_NAME   | ROW_COUNT_MILLION    | MB   |
+| TABLE_NAME   | ROW_COUNT_MILLION    | SIZE   |
 |-------------|-------------|-------------|
-| DIM_CUSTOMER_DAILY_SNAPSHOT| 8.86 | 671.80|
-| DIM_CUSTOMER_SCD | 0.93| 63.11|
+| DIM_CUSTOMER_DAILY_SNAPSHOT| 8.86 | 671.80 MB|
+| DIM_CUSTOMER_SCD | 0.93| 63.11 MB|
+| FCT_ORDER | 460| 2.2 GB|
 
 The size of `DIM_CUSTOMER_SCD` is 10x compared to `DIM_CUSTOMER_DAILY_SNAPSHOT`. This is because an entry will be generated for a primary key regardless of whether the row has change or not. 
 
@@ -251,8 +255,13 @@ Because Snowflake employs a `COPY ON WRITE` mecahnism, everytime a row in an SCD
 *Query Execution Time*
 Although there are a lot more rows in the daily dimension snapshot table, the processing time for constructing the dimension table is much shorter than the SCD Type 2 dimension. This is because building the daily dimension snapshot only requires `INSERT` operation, while SCD Type 2 requires `UPSERT` which invalidates existing micro partition and creates new ones.
 ![Alt text](seconds.png)
-**Joining with the fact table**
-query profile
+**Fact Tabele Creation**
+
+The execution times for both approaches are comparable. The daily dimension snapshot does not require filtering, as the data file can be efficiently skipped by the optimizer. The total bytes scanned were 38.91MB, which is 15% less than the 45.86MB scanned for the SCD Type 2 dimension. The number of partitions scanned was similar for both approaches (11 and 10).
+
+The join operation between the customer dimension and the order fact table was proportionally more expensive for the SCD Type 2 approach. A possible reason for this is that the customer dimension becomes more fragmented after update operations, requiring shuffling.
+
+*Daily Dimension Snapshot*
 ```sql
 SELECT
     o.order_id,
@@ -270,6 +279,9 @@ WHERE
     o.order_date >= '2020-01-30'
     AND o.order_date < '2020-01-31'
 ```
+![Alt text](daily_snapshot_query_profile.png)
+
+*SCD Type 2 Dimension*
 ```sql
 SELECT
     o.order_id,
@@ -289,11 +301,25 @@ WHERE
     o.order_date >= '2020-01-30'
     AND o.order_date < '2020-01-31'
 ```
-
+![Alt text](scd_query_profile.png)
 ## Maintenance
+**Backfill**
+Backfill is the process of filling in historical data that was previously missing or replacing outdated records with updated ones. This often becomes necessary when a data pipeline fails due to its inability to handle schema changes. Once the issue is resolved, a backfill job is needed to fill in the data gaps.
+
+![Alt text](backfill.jpg)
+
+For the SCD Type 2 approach, we cannot simply re-run the new pipeline with specified start_date and end_date for the missing data. This is because dbt's snapshot is built sequentially, necessitating a separate backfill job or a complete re-run of the pipeline for all the days since the failure occurred.
+
+In contrast, for the daily dimension snapshot approach, we can easily rerun the new pipeline for the days when the failure occurred as the dimensions are updated on the same cadence as the fact table.
+
+# Discussion
+For general use case, the query performance for both approaches is fairly similar. The daily snapshot approaches requires a lot more storage compared to SCD Type 2 dimension, but the extra storage is negligible compared to what the fact table requires, and storage is cheap, i.e. Snowflake charges $23/TB, making optimising storage a lower priority in this scenario. In terms of maintenance, the daily snapshot approach allows for straightforward backfilling. In contrast, the SCD Type 2 method requires either a complete refresh after a failure or the creation of a separate backfill job.
+
+When the dimension table is significantly large, such as at the petabyte scale, storing daily snapshots can be prohibitively expensive. For instance, storing a 1 PB dimension table will cost $23,000 per month, not to mention the extra storage required for time-travel. These costs will continue to rise even if there are no changes to the underlying records. In such cases, it may be more efficient to reduce the size of the dimension table by using the SCD Type 2 approach.
 
 
-# Conclusion
+[dbt-badge]: https://img.shields.io/badge/-dbt-1c2541?logo=dbt&logoColor=FF694B&style=for-the-badge
+[dbt-url]: https://www.getdbt.com/
 
-
-
+[snowflake-badge]: https://img.shields.io/badge/-snowflake-1c2541?logo=snowflake&logoColor=29B5E8&style=for-the-badge
+[snowflake-url]: https://www.snowflake.com/
