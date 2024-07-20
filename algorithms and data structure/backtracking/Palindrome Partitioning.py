@@ -3,34 +3,27 @@
 from typing import List
 
 
-def partition(s: str) -> List[List[str]]:
-    res = []
-    cur = []
+# split a string into left and right substring. If left substring is a palindrome,
+# recursively check if the right substring is also a palindrome
+class Solution:
+    def partition(self, s: str) -> List[List[str]]:
+        res = []
+        cur = []
 
-    def backtrack(start_idx, end_idx):
-        print(start_idx, end_idx)
-        if start_idx == len(s)-1:
-            res.append(cur.copy())
-            return
-        
-        left_substring = s[start_idx:end_idx] 
-        print('cur', cur)
-        print('left substring', left_substring)
-        if left_substring != left_substring[::-1]:
-            return
-        
-        cur.append(left_substring)
-        print(cur)
-
-        for i in range(end_idx, len(s)-end_idx+1):
-            print(end_idx, end_idx + i)
-            print('------------')
-            backtrack(end_idx, end_idx + i)
-            cur.pop()
-
-    for i in range(1, len(s)+1):
-        backtrack(0, i)
-    
-    return res
-
-partition('aab')
+        def backtrack(i):
+            if i >= len(s):
+                res.append(cur.copy())
+                return
+            
+            # generate left substring of different length
+            for j in range(i+1, len(s)+1):
+                # if left substring is a palindrome
+                if s[i:j] == s[i:j][::-1]:
+                    cur.append(s[i:j])
+                    # recursively check if the right substring is also a palindrome
+                    backtrack(j)
+                    cur.pop()
+            
+        backtrack(0)
+        return res
+            
