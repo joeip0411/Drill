@@ -2,6 +2,8 @@
 from typing import List
 
 
+# Time complexity = O(n)
+# Space complexity = O(1)
 class Solution:
     def maxTurbulenceSize(self, arr: List[int]) -> int:
         max_count = 1
@@ -26,4 +28,29 @@ class Solution:
                 cur_count = 1
         
         return max_count
+    
+# Time complexity = O(n)
+# Space complexity = O(1)
+class Solution:
+    def maxTurbulenceSize(self, arr: List[int]) -> int:
+        l = 0
+        r = 1
+        max_size = 1
+        prev = ''
+
+        while r < len(arr):
+            if arr[r] < arr[r-1] and prev != '<':
+                max_size = max(max_size, r - l + 1)
+                r += 1
+                prev = '<'
+            elif arr[r] > arr[r-1] and prev != '>':
+                max_size = max(max_size, r - l + 1)
+                r += 1
+                prev = '>'
+            else:
+                r = r + 1 if arr[r] == arr[r-1] else r
+                l = r - 1
+                prev = ''
         
+        return max_size
+                
