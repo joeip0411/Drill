@@ -8,18 +8,21 @@ class Solution:
     def permute(self, nums: List[int]) -> List[List[int]]:
         res = []
         cur = []
+        hash_set = set()
 
         def backtrack():
             if len(cur) == len(nums):
                 res.append(cur.copy())
                 return
             
-            for num in nums:
-                if num in cur:
-                    continue
-                cur.append(num)
-                backtrack()
-                cur.pop()
-        
+            for i in range(len(nums)):
+                if i not in hash_set:
+                    cur.append(nums[i])
+                    hash_set.add(i)
+
+                    backtrack()
+                    cur.pop()
+                    hash_set.remove(i)
+            
         backtrack()
         return res
