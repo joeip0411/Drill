@@ -1,45 +1,29 @@
 # https://leetcode.com/problems/grid-game/
-
 from typing import List
 
 
-# There are n path for the red robot to choose
-# first row calculate prefix sum
-# second row calculate postfix sum
-def gridGame(grid: List[List[int]]) -> int:
+# Blue will get the higher of the postifx of row 1 or prefix of row 2
+# Red will try to minimise blue's point, so this is a prefix sum problem with the minimax concept
+# Time complexity = O(n)
+# Space complexity = O(n)
+class Solution:
+    def gridGame(self, grid: List[List[int]]) -> int:
+        
+        prefix = grid[1].copy()
+        postfix = grid[0].copy()
 
-    prefix_sum = []
-    postfix_sum = []
+        for i in range(1, len(prefix)):
+            prefix[i] += prefix[i-1]
 
-    points = 0
+        for i in range(len(postfix)-2, -1, -1):
+            postfix[i] += postfix[i+1]
 
-    for i in range(len(grid[0])):
-        points += grid[0][i]
-        prefix_sum.append(points)
-    
-    points = 0
-    for j in range(len(grid[1])-1, -1, -1):
-        points += grid[1][j]
-        postfix_sum.append(points)
-    postfix_sum = postfix_sum[::-1]
-    max_idx = 0
-    max_points = 0
+        min_max_point = float('inf')
 
-    print(prefix_sum)
-    print(postfix_sum)
-    for i in range(len(prefix_sum)):
-        total_points = prefix_sum[i] + postfix_sum[i]
-        if total_points > max_points:
-            max_points = total_points
-            max_idx = i
-    
-    print(max_idx)
-    upper_points = sum([grid[0][i] for i in range(max_idx+1, len(grid[0]))])
-    lower_points = sum([grid[1][j] for j in range(max_idx - 1, -1, -1)])
-
-    res = max(upper_points, lower_points)
-    return res
-
-
-gridGame([[20,3,20,17,2,12,15,17,4,15],
-          [20,10,13,14,15,5,2,3,14,3]])
+        for i in range(len(grid[0])):
+            up_point = postfix[i+1] if i+1 < len(grid[0]) else 0
+            down_point = prefix[i-1] if i-1 >= 0 else 0
+            blue_point = max(up_point, down_point)
+            min_max_point = min(min_max_point, blue_point)
+        
+        return min_max_point
