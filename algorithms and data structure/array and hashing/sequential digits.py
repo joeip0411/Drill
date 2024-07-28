@@ -49,7 +49,7 @@ def sequentialDigits(self, low: int, high: int) -> List[int]:
         digit = num % 10
         
         if digit < 9:
-            new_num = (digit + 1) + num * 10
+            new_num = num * 10 + (digit + 1)
             q.append(new_num)
     
     return res
