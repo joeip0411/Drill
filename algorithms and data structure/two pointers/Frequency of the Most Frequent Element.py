@@ -8,6 +8,7 @@ class Solution:
     # if not decrease window size by shifting left pointer one spot to the right
 
     # Time complexity = O(n) because the left / right pointer is shifted one spot to the right in each iteration
+    # Space complexity = O(1)
     def maxFrequency(self, nums: List[int], k: int) -> int:
         nums.sort()
 
