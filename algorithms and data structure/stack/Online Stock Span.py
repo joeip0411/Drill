@@ -24,25 +24,3 @@ class StockSpanner:
 # Your StockSpanner object will be instantiated and called as such:
 # obj = StockSpanner()
 # param_1 = obj.next(price)
-
-path = "/home/user/Documents/../Pictures"
-cur = []
-res = []
-has_start = False
-
-for char in path:
-    if char == '/' and not has_start:
-        continue
-    elif char != '/':
-        has_start = True
-        cur.append(char)
-    elif char == '/' and has_start:
-        s = ''.join(cur)
-        if s == '..' and res:
-            res.pop()
-        elif s not in ('.', '..'):
-            res.append(s)
-        cur = []
-        hash_start = False
-
-    print(cur)
